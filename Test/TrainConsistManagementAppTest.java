@@ -1,57 +1,57 @@
 import org.junit.jupiter.api.Test;
+import java.util.regex.Pattern;
 import static org.junit.jupiter.api.Assertions.*;
 
 class TrainConsistManagementAppTest {
 
-    private boolean safeSearch(String[] arr, String key) {
-        if (arr == null || arr.length == 0) {
-            throw new IllegalStateException("No bogies available for search");
-        }
+    private final Pattern trainPattern = Pattern.compile("TRN-\\d{4}");
+    private final Pattern cargoPattern = Pattern.compile("PET-[A-Z]{2}");
 
-        for (String id : arr) {
-            if (id.equals(key)) {
-                return true;
-            }
-        }
-        return false;
+    @Test
+    void testRegex_ValidTrainID() {
+        assertTrue(trainPattern.matcher("TRN-1234").matches());
     }
 
     @Test
-    void testSearch_ThrowsExceptionWhenEmpty() {
-        String[] arr = {};
-
-        Exception ex = assertThrows(IllegalStateException.class, () -> {
-            safeSearch(arr, "BG101");
-        });
-
-        assertEquals("No bogies available for search", ex.getMessage());
+    void testRegex_InvalidTrainIDFormat() {
+        assertFalse(trainPattern.matcher("TRAIN12").matches());
+        assertFalse(trainPattern.matcher("TRN12A").matches());
+        assertFalse(trainPattern.matcher("1234-TRN").matches());
     }
 
     @Test
-    void testSearch_AllowsSearchWhenDataExists() {
-        String[] arr = {"BG101","BG205"};
-
-        assertDoesNotThrow(() -> safeSearch(arr, "BG101"));
+    void testRegex_ValidCargoCode() {
+        assertTrue(cargoPattern.matcher("PET-AB").matches());
     }
 
     @Test
-    void testSearch_BogieFoundAfterValidation() {
-        String[] arr = {"BG101","BG205","BG309"};
-
-        assertTrue(safeSearch(arr, "BG205"));
+    void testRegex_InvalidCargoCodeFormat() {
+        assertFalse(cargoPattern.matcher("PET-ab").matches());
+        assertFalse(cargoPattern.matcher("PET123").matches());
+        assertFalse(cargoPattern.matcher("AB-PET").matches());
     }
 
     @Test
-    void testSearch_BogieNotFoundAfterValidation() {
-        String[] arr = {"BG101","BG205","BG309"};
-
-        assertFalse(safeSearch(arr, "BG999"));
+    void testRegex_TrainIDDigitLengthValidation() {
+        assertFalse(trainPattern.matcher("TRN-123").matches());
+        assertFalse(trainPattern.matcher("TRN-12345").matches());
     }
 
     @Test
-    void testSearch_SingleElementValidCase() {
-        String[] arr = {"BG101"};
+    void testRegex_CargoCodeUppercaseValidation() {
+        assertFalse(cargoPattern.matcher("PET-Ab").matches());
+        assertFalse(cargoPattern.matcher("PET-aB").matches());
+    }
 
-        assertTrue(safeSearch(arr, "BG101"));
+    @Test
+    void testRegex_EmptyInputHandling() {
+        assertFalse(trainPattern.matcher("").matches());
+        assertFalse(cargoPattern.matcher("").matches());
+    }
+
+    @Test
+    void testRegex_ExactPatternMatch() {
+        assertFalse(trainPattern.matcher("TRN-1234X").matches());
+        assertFalse(cargoPattern.matcher("PET-ABCD").matches());
     }
 }
